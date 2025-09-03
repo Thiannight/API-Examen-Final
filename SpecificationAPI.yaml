@@ -1,0 +1,162 @@
+openapi: 3.0.3
+info:
+  title: STD24137
+  version: "1.0.0"
+  description: "This is a specification of STD24137"
+servers:
+  - url: http://localhost:8000
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      responses:
+        "200":
+          description: Plain text OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Ok
+
+  /phones:
+    post:
+      summary: Create and persist a list of phones in memory
+      operationId: createPhones
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Phone"
+      responses:
+        "201":
+          description: List of phones created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Phone"
+    get:
+      summary: Get the list of phones previously saved in memory
+      operationId: listPhones
+      responses:
+        "200":
+          description: List of phones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Phone"
+
+  /phones/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get a single phone by its identifier
+      operationId: getPhoneById
+      responses:
+        "200":
+          description: Phone found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Phone"
+        "404":
+          description: Phone not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+              examples:
+                notFound:
+                  value:
+                    message: "Le phone fourni n existe pas ou n’a pas éte trouvé."
+
+  /phones/{id}/characteristics:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      summary: "(BONUS) Update only the characteristics of a phone"
+      operationId: updateCharacteristics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharacteristicUpdate"
+      responses:
+        "200":
+          description: Updated phone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Phone"
+        "404":
+          description: Phone not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorMessage"
+
+components:
+  schemas:
+    Characteristic:
+      type: object
+      required: [ram_memory, rom_memory]
+      properties:
+        ram_memory:
+          type: number
+          description: RAM size
+          example: 16
+        rom_memory:
+          type: number
+          description: Storage size
+          example: 512
+
+    CharacteristicUpdate:
+      allOf:
+        - $ref: "#/components/schemas/Characteristic"
+
+    PhoneBase:
+      type: object
+      required: [identifier, brand, model]
+      properties:
+        identifier:
+          type: string
+          example: "phn-001"
+        brand:
+          type: string
+          example: "Google"
+        model:
+          type: string
+          example: "Pixel 6 Pro"
+
+    Phone:
+      allOf:
+        - $ref: "#/components/schemas/PhoneBase"
+        - type: object
+          required: [characteristics]
+          properties:
+            characteristics:
+              $ref: "#/components/schemas/Characteristic"
+
+    ErrorMessage:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: "Le phone fourni n’existe pas ou n’a pas été trouve."
